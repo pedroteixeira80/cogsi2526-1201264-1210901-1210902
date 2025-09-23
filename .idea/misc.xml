@@ -6,6 +6,7 @@
       <list>
         <option value="$PROJECT_DIR$/spring-framework-petclinic/pom.xml" />
         <option value="$PROJECT_DIR$/CA0/spring-framework-petclinic/pom.xml" />
+        <option value="$PROJECT_DIR$/CA1/spring-framework-petclinic/pom.xml" />
       </list>
     </option>
     <option name="ignoredFiles">
