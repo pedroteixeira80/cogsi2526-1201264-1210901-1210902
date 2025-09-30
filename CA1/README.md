@@ -5,7 +5,6 @@ Hélder Rocha (1210901) - 50%\
 Pedro Teixeira (1210902) - 50%
 
 ## Technical Report
-testar conflitos 2
 
 - ### Description of analysis
 Analisamos os objetivos para a CA1 e percebemos que iria ser necessário utilizar vários comandos de git.
