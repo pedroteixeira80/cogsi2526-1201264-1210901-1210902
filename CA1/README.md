@@ -44,3 +44,17 @@ Analisamos os objetivos para a CA1 e percebemos que iria ser necessário utiliza
 - 28 - Surgiram conflitos que foram tratados no código.
 - 29 - Demos git add ao readme para atualizá-lo, de seguida fizemos git rebase --continue e verificamos que não haviam mais conflitos, tal como esperado.
 - 30 - Depois repetimos os passos 18,19 e 20 que já correram como esperado pois o rebase já tinha sido realizado.
+
+#### Alternativas
+Duas alternativas para o git são o Mercurial e Apache Subversion(SVN)
+###Comparação
+##Mercurial
+O Mercurial tal como o Git é um sistema de controle de versão distribuido permitindo que funcione localmente sem um servidor central.Este tem um foco na simplicidade tendo
+a maior parte das features de versão de controlo(branching,merging,tagging) mas de forma mais simples de usar.
+A maior diferença entre eles é o facto de o Mercurial por default não permitir alterar commits tirando o último que reduz os problemas em alterar
+##SVN
+O SVN é sistema de controle de versão centralizado,isto é,existe apenas um repositoŕio central online onde todos os developers trabalham requirindo conecção de internet para
+qualquer operação.Devido a esta natureza centralizada o histórico do SVN é linear o que torna mais simples de entender estas alterações mas dificulta o desenvolvimento 
+ao mesmo tempo por vários membros.O SVN permite merging mas de forma mais simples que o Git.
+Em termo de branching o SVN funciona de forma que cada branch é uma cópia do diretório dentro do repositório enquanto no Git branches são apenas pointers para commits. 
+
