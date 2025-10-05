@@ -51,13 +51,13 @@ Analisamos os objetivos para a CA1 e percebemos que iria ser necessário utiliza
 Duas alternativas para o git são o Mercurial e Apache Subversion(SVN)
 ###  Comparação
 ## Mercurial
-O Mercurial tal como o Git é um sistema de controle de versão distribuido permitindo que funcione localmente sem um servidor central.Este tem um foco na simplicidade tendo
+O Mercurial tal como o Git é um sistema de controlo de versões distribuido permitindo que funcione localmente sem um servidor central. Este tem um foco na simplicidade tendo
 a maior parte das features de versão de controlo(branching,merging,tagging) mas de forma mais simples de usar.
 A maior diferença entre eles é o facto de o Mercurial por default não permitir alterar commits tirando o último.
 ## SVN
-O SVN é sistema de controle de versão centralizado,isto é,existe apenas um repositoŕio central online onde todos os developers trabalham requirindo conecção de internet para
-qualquer operação.Devido a esta natureza centralizada o histórico do SVN é linear o que torna mais simples de entender estas alterações mas dificulta o desenvolvimento 
-ao mesmo tempo por vários membros.O SVN permite merging mas de forma mais simples que o Git.
+O SVN é sistema de controlo de versões centralizado,isto é, existe apenas um repositoŕio central online onde todos os developers trabalham requirindo conexão à internet para
+qualquer operação. Devido a esta natureza centralizada o histórico do SVN é linear o que torna mais simples de entender estas alterações mas dificulta o desenvolvimento 
+ao mesmo tempo por vários membros. O SVN permite merging mas de forma mais simples que o Git.
 Em termo de branching o SVN funciona de forma que cada branch é uma cópia do diretório dentro do repositório enquanto no Git branches são apenas pointers para commits. 
 
 ### Implementação mercurial
@@ -67,7 +67,7 @@ Em termo de branching o SVN funciona de forma que cada branch é uma cópia do d
 - 3 - Fizemos um hg add . para dar track aos ficheiros e fizemos hg commit para criar o primeiro commit.
 # Repositório remoto
  Devido ao facto do bitbucket ter acabado o suporte para mercurial decidi simular um relatório "remoto" onde possa dar push.Para isso criei um novo folder(mkdir mercurial-remoto)
- e fiz git innit nele.Voltei ao diretório inicial(mercurial) e editei o .hg/hgrc file para adicionar o mercurial-remote como o origin.
+ e fiz git innit nele. Voltei ao diretório inicial(mercurial) e editei o .hg/hgrc file para adicionar o mercurial-remote como o origin.
 - 4 - Adicionamos a tag (hg tag v1.1.0) e fizemos push para o repositório remoto (hg  push origin).
 # Alterações
 Tendo em conta que o âmbito desta implementação é o uso de uma nova versão de controlo o framework copiado foi o final, as alterações no projeto não serão as mesmas mas sim
