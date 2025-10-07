@@ -1,4 +1,5 @@
 # IntelliJ
+.idea/**/*
 .idea/**/workspace.xml
 .idea/**/tasks.xml
 .idea/**/usage.statistics.xml
@@ -8,6 +9,8 @@
 .idea/copilot.data.migration.ask.xml
 .idea/copilot.data.migration.ask2agent.xml
 .idea/gradle.xml
+../../.idea/modules.xml
+../../.idea/modules/basic_demo.test.iml
 out/
 # Compiled class file
 *.class
