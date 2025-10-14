@@ -10,10 +10,22 @@
         <module name="spring-framework-petclinic (2)" />
       </profile>
     </annotationProcessing>
+    <bytecodeTargetLevel>
+      <module name="evolution" target="17" />
+      <module name="links" target="17" />
+      <module name="nonrest" target="17" />
+      <module name="rest" target="17" />
+      <module name="tut-rest" target="1.5" />
+      <module name="tut-rest-gradle.app.main" target="17" />
+      <module name="tut-rest-gradle.app.test" target="17" />
+    </bytecodeTargetLevel>
   </component>
   <component name="JavacSettings">
     <option name="ADDITIONAL_OPTIONS_OVERRIDE">
       <module name="spring-framework-petclinic" options="-parameters" />
+      <module name="tut-gradle" options="-parameters" />
+      <module name="tut-gradle.main" options="-parameters" />
+      <module name="tut-gradle.test" options="-parameters" />
     </option>
   </component>
 </project>
