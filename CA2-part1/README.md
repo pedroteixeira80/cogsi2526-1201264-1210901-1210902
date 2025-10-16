@@ -85,3 +85,16 @@ Na última parte do output é possível ver que o Gradle detetou também outra v
 - 30 - 
 
 #### Alternativas
+### Ant
+## Comparison Between Gradle and Ant
+
+Gradle and  Ant are build automation tools for Java allowing to standardize builds and make them faster.
+Ant is one of the oldest build tools known for it's highly controllable way to define builds being still used in simpler projects.
+Gradle is more modern simplified approach focused on scripting that allows for more advanced features.
+
+| **Factors**               | **Gradle**                                                                                                                      | **Ant**                                                                                         |
+|:--------------------------|:--------------------------------------------------------------------------------------------------------------------------------|:------------------------------------------------------------------------------------------------|
+| **Configuration**         | Groovy or Kotlin — relatibly concise and easier to understand.                                                                  | XML — very verbose,everything has to be typed                                                   |
+| **Dependency Management** | Built-in dependency resolution                                                                                                  | No native dependency management                                                                 |
+| **Tasks**                 | very flexible and easy to create custom tasks                                                                                   | More complext to configure                                                                      |
+| **Performance**           | Incremental builds and caching reduce work and speed up repeated builds.                                                        | No built-in incremental build/caching         |
