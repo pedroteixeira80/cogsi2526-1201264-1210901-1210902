@@ -2,13 +2,10 @@ services:
   # H2 Database Service
   db:
     build:
-      context: . # Build from the current directory
-      dockerfile: DockerfileDB # Specify the Dockerfile to use
+      context: .
+      dockerfile: DockerfileDB
     container_name: cogsi_h2_database
-    ports:
-      - "8082:8082" # H2 web console (http://localhost:8082)
     volumes:
-      # Map a local folder for persistent database storage
       - ./db-data:/opt/h2-data
     networks:
       cogsi_network:
@@ -27,15 +24,12 @@ services:
       context: .
       dockerfile: DockerfileApp
       args:
-        # Securely pass the repository URL as a build argument.
-        # It will NOT be available in the final running container.
         - REPO_URL=https://1201264isep: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@github.com/pedroteixeira80/cogsi2526-1201264-1210901-1210902.git
     container_name: cogsi_spring_app
     ports:
       - "8080:8080" # Spring Boot application (http://localhost:8080)
     environment:
-      # Environment variables for the Spring Boot application to connect to the DB.
-      # We use the service name 'db' which Docker networking resolves automatically.
+
       - SPRING_DATASOURCE_URL=jdbc:h2:tcp://db:9092/./h2-data/jpadb;DB_CLOSE_DELAY=-1;DB_CLOSE_ON_EXIT=FALSE
       - SPRING_DATASOURCE_USERNAME=sa
       - SPRING_DATASOURCE_PASSWORD=
@@ -46,7 +40,6 @@ services:
         ipv4_address: 172.20.0.20
     depends_on:
       db:
-        # This is the best practice: wait until the DB service is healthy before starting the app.
         condition: service_healthy
     restart: unless-stopped
 

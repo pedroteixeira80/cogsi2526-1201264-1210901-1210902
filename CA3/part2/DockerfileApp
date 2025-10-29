@@ -1,7 +1,6 @@
-# === STAGE 1: Build the application using a Gradle image ===
 FROM gradle:8.5.0-jdk17 AS builder
 
-# Install git in the builder stage
+# Install git
 RUN apt-get update && apt-get install -y git
 
 WORKDIR /home/gradle/project
@@ -14,13 +13,11 @@ RUN git clone ${REPO_URL} .
 # Set the working directory to the specific Gradle project
 WORKDIR /home/gradle/project/CA2-part2/tut-gradle
 
-# Build the application using the system-installed Gradle from the base image
-# We keep '-x test' to skip tests, which is best practice for CI/CD and Docker builds.
+# Build the application using Gradle from the base image
 RUN gradle build -x test
 
 
 # === STAGE 2: Create the final, lightweight runtime image ===
-# ... (The rest of the file remains the same) ...
 FROM eclipse-temurin:17-jre-focal
 
 WORKDIR /app

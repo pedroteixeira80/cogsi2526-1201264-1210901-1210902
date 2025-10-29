@@ -100,7 +100,7 @@ The goal of Part 2 was to separate the Spring application and the H2 database in
 This Dockerfile creates a lightweight container for running H2 in server mode.
 
 - **H2 Installation:** Downloads a specific H2 JAR for consistent versioning.
-- **Server Mode:** The 'CMD' instruction starts the H2 database server, configured to accept remote TCP connections ('-tcp -tcpAllowOthers') on port 9092 and allows web console access on 8082.
+- **Server Mode:** The  instruction starts the H2 database server, configured to accept remote TCP connections ('-tcp -tcpAllowOthers') on port 9092 .
 
 ```Dockerfile
 # part2/DockerfileDB
@@ -114,11 +114,10 @@ RUN mkdir -p $H2_DIR && mkdir -p $H2_DATA_DIR
 RUN wget https://repo1.maven.org/maven2/com/h2database/h2/2.1.214/h2-2.1.214.jar -O $H2_DIR/h2.jar
 
 WORKDIR $H2_DATA_DIR
-EXPOSE 9092 8082
+EXPOSE 9092
 
 CMD ["java", "-cp", "/opt/h2/h2.jar", "org.h2.tools.Server",
      "-tcp", "-tcpAllowOthers", "-tcpPort", "9092",
-     "-web", "-webAllowOthers", "-webPort", "8082",
      "-baseDir", "/opt/h2-data", "-ifNotExists"]
 ```
 
