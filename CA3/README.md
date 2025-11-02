@@ -1,4 +1,8 @@
 # CA3 - Virtualização com Vagrant
+## Self-evaluation
+Hélder Rocha (1210901) - 33,33%
+Pedro Teixeira (1210902) - 33,33%
+Francisco Gouveia(1201264) - 33,33%
 
 ## Parte 1 - Configuração do Vagrant para Implementação de VM
 
