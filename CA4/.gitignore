@@ -1,0 +1,61 @@
+# Vagrant
+.vagrant/
+*.box
+
+# Ansible
+*.retry
+*.pyc
+__pycache__/
+.ansible/
+ansible.log
+
+# SSH keys and sensitive data
+*.pem
+*.key
+id_rsa*
+*.pub
+
+# Ansible vault password files
+.vault_pass
+.vault_password
+vault_pass.txt
+
+# Inventory files with sensitive data (optional - adjust based on your needs)
+# inventory/production
+# inventory/*/hosts
+
+# Ansible Galaxy
+roles/external/
+.galaxy_install_info
+
+# Environment files
+.env
+.envrc
+
+# OS specific
+.DS_Store
+Thumbs.db
+Desktop.ini
+
+# Editor and IDE
+.vscode/
+.idea/
+*.swp
+*.swo
+*~
+.project
+.settings/
+
+# Logs
+logs/
+*.log
+
+# Temporary files
+tmp/
+temp/
+*.tmp
+
+# Python virtual environments (if using Ansible with Python)
+venv/
+env/
+.venv/

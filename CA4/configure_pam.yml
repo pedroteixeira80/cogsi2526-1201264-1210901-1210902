@@ -1,0 +1,12 @@
+- name: Install PAM dependencies
+  apt:
+    name: "libpam-pwquality"
+    state: present
+    update_cache: yes
+
+- name: Configure pam_pwquality
+  lineinfile:
+    path: "/etc/pam.d/common-password"
+    regexp: "pam_pwquality.so"
+    line: "password required pam_pwquality.so minlen=12 lcredit=-1 ucredit=-1 dcredit=-1 ocredit=-1 retry=3 enforce_for_root"
+    state: present
