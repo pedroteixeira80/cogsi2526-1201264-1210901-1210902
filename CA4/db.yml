@@ -1,0 +1,71 @@
+- name: Update apt cache
+  apt:
+    update_cache: yes
+
+- name: Install OpenJDK 17 and unzip
+  apt:
+    name:
+      - openjdk-17-jdk
+      - unzip
+    state: present
+
+- name: Check if H2 directory exists
+  stat:
+    path: /opt/h2
+  register: h2_dir
+
+- name: Download and extract H2 database
+  when: not h2_dir.stat.exists
+  block:
+    - name: Download H2 database
+      get_url:
+        url: http://www.h2database.com/h2-2019-10-14.zip
+        dest: /opt/h2-2019-10-14.zip
+
+    - name: Create H2 directory
+      file:
+        path: /opt/h2
+        state: directory
+
+    - name: Unzip H2 database
+      unarchive:
+        src: /opt/h2-2019-10-14.zip
+        dest: /opt/h2
+        remote_src: yes
+
+- name: Check if H2 database is running on port 9092
+  shell: netstat -tuln | grep ':9092'
+  register: h2_status
+  ignore_errors: true
+
+- name: Start H2 database if not running
+  shell: "nohup java -cp /opt/h2/h2/bin/h2*.jar org.h2.tools.Server -tcp -tcpAllowOthers -tcpPort 9092 -web -webAllowOthers -webPort 8082 -baseDir /home/vagrant/h2_data -ifNotExists > /dev/null 2>&1 &"
+  when: h2_status.stdout.find('9092') == -1
+  args:
+    chdir: /home/vagrant
+
+- name: Install UFW (Uncomplicated Firewall)
+  apt:
+    name: ufw
+    state: present
+
+- name: Set UFW default policy to deny incoming connections
+  ufw:
+    default: deny
+    direction: incoming
+
+- name: Set UFW default policy to allow outgoing connections
+  ufw:
+    default: allow
+    direction: outgoing
+
+- name: Allow connections to H2 database port (9092) from app VM (192.168.56.12)
+  ufw:
+    rule: allow
+    proto: tcp
+    from_ip: 192.168.56.12
+    port: "9092"
+
+- name: Enable UFW
+  ufw:
+    state: enabled

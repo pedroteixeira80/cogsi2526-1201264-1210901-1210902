@@ -1,0 +1,71 @@
+- name: Update apt cache
+  apt:
+    update_cache: yes
+
+- name: Install Java and Git
+  apt:
+    name:
+      - openjdk-17-jdk
+      - git
+    state: present
+
+- name: Clone Spring Boot application repository
+  git:
+    repo: "https://token@github.com/pedroteixeira80/cogsi2526-1201264-1210901-1210902.git"
+    dest: "/home/vagrant/app"
+    version: "HEAD"
+  ignore_errors: true
+
+- name: Configure Git user
+  command: "git config --global {{ item.key }} {{ item.value }}"
+  with_items:
+    - { key: "user.email", value: "1210902@isep.ipp.pt" }
+    - { key: "user.name", value: "Pedro" }
+
+- name: Create application properties directory
+  file:
+    path: "/home/vagrant/app/CA2-part2/tut-gradle/src/main/resources"
+    state: directory
+    mode: '0755'
+
+- name: Configure application.properties
+  copy:
+    dest: "/home/vagrant/app/CA2-part2/tut-gradle/src/main/resources/application.properties"
+    content: |
+      # H2 Database configuration
+      spring.datasource.url=jdbc:h2:tcp://192.168.56.11:9092/home/vagrant/h2_data/test
+      spring.datasource.driverClassName=org.h2.Driver
+      spring.datasource.username=sa
+      spring.datasource.password=  
+      spring.datasource.platform=h2
+      
+      # Optional: Show SQL and set H2 console path
+      spring.h2.console.enabled=true
+      spring.h2.console.path=/h2-console
+      spring.jpa.show-sql=true
+      spring.jpa.hibernate.ddl-auto=update
+
+- name: Wait for db VM to start
+  wait_for:
+    host: "192.168.56.11"
+    port: 9092
+    delay: 5
+    timeout: 300
+    state: started
+
+- name: Ensure application directory is executable
+  file:
+    path: "/home/vagrant/app"
+    mode: '0755'
+    recurse: yes
+
+- name: Make Gradle wrapper executable
+  file:
+    path: "/home/vagrant/app/CA2-part2/tut-gradle/gradlew"
+    mode: '0755'
+
+- name: Build and start the Spring Boot application
+  shell: "nohup ./gradlew bootRun > spring_app.log 2>&1 &"
+  args:
+    chdir: "/home/vagrant/app/CA2-part2/tut-gradle"
+  ignore_errors: true

@@ -1,0 +1,6 @@
+- hosts: app
+  become: yes
+  tasks:
+    - import_tasks: app.yml
+    - import_tasks: configure_pam.yml
+    - import_tasks: configure_users.yml
