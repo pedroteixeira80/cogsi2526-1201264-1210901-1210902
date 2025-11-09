@@ -818,3 +818,5 @@ check_spring_app_health:
 Mandamos um request para o actuator/health endpoint que é um endpoint do spring boot para verificar o estado.
 
 Ambos estes módulos dependem de módulos de outros ficheiros mas no salt as dependências são globais para cada minion.
+
+
