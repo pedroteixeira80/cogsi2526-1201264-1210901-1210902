@@ -2,26 +2,88 @@
 - name: Update apt cache
   apt:
     update_cache: yes
+    cache_valid_time: 3600
 
-- name: Install Java and Git
+- name: Install dependencies
   apt:
     name:
       - openjdk-17-jdk
       - git
+      - netcat-openbsd
+      - curl
+      - wget
+      - unzip
+      - net-tools
     state: present
 
-- name: Clone Spring Boot application repository
-  git:
-    repo: "https://token@github.com/pedroteixeira80/cogsi2526-1201264-1210901-1210902.git"
-    dest: "/home/vagrant/app"
-    version: "HEAD"
-  ignore_errors: true
+- name: Check if Gradle is installed
+  stat:
+    path: /usr/bin/gradle
+  register: gradle_installed
+
+- name: Install Gradle
+  when: not gradle_installed.stat.exists
+  block:
+    - name: Download Gradle
+      get_url:
+        url: https://services.gradle.org/distributions/gradle-8.5-bin.zip
+        dest: /tmp/gradle-8.5-bin.zip
+
+    - name: Create Gradle directory
+      file:
+        path: /opt/gradle
+        state: directory
+
+    - name: Unzip Gradle
+      unarchive:
+        src: /tmp/gradle-8.5-bin.zip
+        dest: /opt/gradle
+        remote_src: yes
+
+    - name: Create Gradle symlink
+      file:
+        src: /opt/gradle/gradle-8.5/bin/gradle
+        dest: /usr/bin/gradle
+        state: link
 
 - name: Configure Git user
-  command: "git config --global {{ item.key }} {{ item.value }}"
-  with_items:
-    - { key: "user.email", value: "1210902@isep.ipp.pt" }
-    - { key: "user.name", value: "Pedro" }
+  git_config:
+    name: "{{ item.name }}"
+    scope: global
+    value: "{{ item.value }}"
+  loop:
+    - { name: "user.email", value: "1210902@isep.ipp.pt" }
+    - { name: "user.name", value: "Pedro" }
+
+- name: Check if app directory exists
+  stat:
+    path: /home/vagrant/app
+  register: app_dir
+
+- name: Remove existing app directory if present
+  file:
+    path: /home/vagrant/app
+    state: absent
+  when: app_dir.stat.exists
+
+- name: Clone Spring Boot application repository
+  shell: |
+    git clone https://{{ lookup('env', 'GITHUB_TOKEN') }}@github.com/pedroteixeira80/cogsi2526-1201264-1210901-1210902.git /home/vagrant/app
+  args:
+    creates: /home/vagrant/app
+  become: yes
+  become_user: vagrant
+  environment:
+    GIT_TERMINAL_PROMPT: '0'
+  register: git_clone
+  failed_when: git_clone.rc != 0 and git_clone.rc != 128
+
+- name: Set ownership of app directory
+  file:
+    path: /home/vagrant/app
+    owner: vagrant
+    group: vagrant
+    recurse: yes
 
 - name: Create application properties directory
   file:
@@ -33,40 +95,115 @@
   copy:
     dest: "/home/vagrant/app/CA2-part2/tut-gradle/src/main/resources/application.properties"
     content: |
-      # H2 Database configuration
-      spring.datasource.url=jdbc:h2:tcp://192.168.56.11:9092/home/vagrant/h2_data/test
+      # H2 Database Configuration (Remote DB Server)
+      spring.datasource.url=jdbc:h2:tcp://192.168.56.11:9092/home/vagrant/h2_data/jpadb;DB_CLOSE_DELAY=-1;DB_CLOSE_ON_EXIT=FALSE
       spring.datasource.driverClassName=org.h2.Driver
       spring.datasource.username=sa
-      spring.datasource.password=  
-      spring.datasource.platform=h2
+      spring.datasource.password=
       
-      # Optional: Show SQL and set H2 console path
+      # JPA Configuration
+      spring.jpa.database-platform=org.hibernate.dialect.H2Dialect
+      spring.jpa.hibernate.ddl-auto=update
+      
+      # H2 Console Configuration
       spring.h2.console.enabled=true
       spring.h2.console.path=/h2-console
-      spring.jpa.show-sql=true
-      spring.jpa.hibernate.ddl-auto=update
+      spring.h2.console.settings.web-allow-others=true
+      
+      # Spring Data REST
+      spring.data.rest.base-path=/api
 
-- name: Wait for db VM to start
+- name: Wait for DB server to be ready
   wait_for:
-    host: "192.168.56.11"
+    host: 192.168.56.11
     port: 9092
     delay: 5
     timeout: 300
     state: started
-
-- name: Ensure application directory is executable
-  file:
-    path: "/home/vagrant/app"
-    mode: '0755'
-    recurse: yes
 
 - name: Make Gradle wrapper executable
   file:
     path: "/home/vagrant/app/CA2-part2/tut-gradle/gradlew"
     mode: '0755'
 
-- name: Build and start the Spring Boot application
-  shell: "nohup ./gradlew bootRun > spring_app.log 2>&1 &"
+- name: Check Gradle wrapper integrity
+  stat:
+    path: "/home/vagrant/app/CA2-part2/tut-gradle/gradle/wrapper/gradle-wrapper.jar"
+  register: wrapper_jar
+
+- name: Regenerate Gradle wrapper if missing or incomplete
+  shell: "gradle wrapper --gradle-version 8.5"
   args:
     chdir: "/home/vagrant/app/CA2-part2/tut-gradle"
-  ignore_errors: true
+  when: not wrapper_jar.stat.exists
+  become: yes
+  become_user: vagrant
+
+- name: Make Gradle wrapper executable again after regeneration
+  file:
+    path: "/home/vagrant/app/CA2-part2/tut-gradle/gradlew"
+    mode: '0755'
+  when: not wrapper_jar.stat.exists
+
+- name: Build the application
+  shell: "./gradlew clean build -x test"
+  args:
+    chdir: "/home/vagrant/app/CA2-part2/tut-gradle"
+  become: yes
+  become_user: vagrant
+  environment:
+    HOME: /home/vagrant
+
+- name: Start Spring Boot application
+  shell: "nohup ./gradlew bootRun > /home/vagrant/spring-app.log 2>&1 & echo $! > /home/vagrant/spring-app.pid"
+  args:
+    chdir: "/home/vagrant/app/CA2-part2/tut-gradle"
+  become: yes
+  become_user: vagrant
+  environment:
+    HOME: /home/vagrant
+
+- name: Wait a moment for application to initialize
+  pause:
+    seconds: 10
+
+- name: Check if Spring Boot process is running
+  shell: "pgrep -f 'gradle.*bootRun'"
+  register: app_process
+  changed_when: false
+  failed_when: false
+
+- name: Display Spring Boot log for debugging
+  shell: "tail -50 /home/vagrant/spring-app.log"
+  register: app_log
+  changed_when: false
+  ignore_errors: yes
+
+- name: Show application log
+  debug:
+    var: app_log.stdout_lines
+
+- name: Show process status
+  debug:
+    msg: "Spring Boot process running: {{ app_process.rc == 0 }}"
+
+- name: Wait for Spring Boot to be ready
+  wait_for:
+    port: 8080
+    host: 0.0.0.0
+    delay: 5
+    timeout: 120
+  retries: 3
+  delay: 10
+  register: app_ready
+  until: app_ready is succeeded
+
+- name: Health check - Verify Spring Boot is responding
+  uri:
+    url: http://localhost:8080
+    method: GET
+    status_code: 200
+  retries: 5
+  delay: 5
+  register: health_check
+  until: health_check.status == 200

@@ -5,3 +5,4 @@
     - import_tasks: app.yml
     - import_tasks: configure_pam.yml
     - import_tasks: configure_users.yml
+    #- import_tasks: configure_permissions.yml
