@@ -1,4 +1,4 @@
-
+---
 - name: Create developers group
   group:
     name: developers
@@ -10,14 +10,3 @@
     groups: developers
     append: yes
     state: present
-
-- name: Restrict access to Spring and H2 directories
-  file:
-    path: "{{ item }}"
-    owner: devuser
-    group: developers
-    mode: '0750'
-  loop:
-    - /home/vagrant/app
-    - /home/vagrant/h2_data
-  ignore_errors: true #since the directories dont exist in both machines

@@ -58,4 +58,5 @@ temp/
 # Python virtual environments (if using Ansible with Python)
 venv/
 env/
-.venv/
+.venv/.DS_Store
+**/.DS_Store

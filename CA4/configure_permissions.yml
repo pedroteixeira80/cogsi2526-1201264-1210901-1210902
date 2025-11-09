@@ -1,0 +1,27 @@
+---
+- name: Add vagrant user to developers group
+  user:
+    name: vagrant
+    groups: developers
+    append: yes
+  when: "'db' in group_names or 'app' in group_names"
+
+- name: Set ownership of app directory to developers group
+  file:
+    path: /home/vagrant/app
+    owner: devuser
+    group: developers
+    mode: '0750' #means only owner (vagrant) and group (developers) can access
+    recurse: yes
+  become: yes
+  when: "'app' in group_names"
+
+- name: Set ownership of h2_data directory to developers group
+  file:
+    path: /home/vagrant/h2_data
+    owner: vagrant
+    group: developers
+    mode: '0750'
+    recurse: yes
+  become: yes
+  when: "'db' in group_names"

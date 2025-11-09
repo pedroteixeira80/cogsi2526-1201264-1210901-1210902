@@ -1,6 +1,8 @@
+---
 - hosts: db
   become: yes
   tasks:
     - import_tasks: db.yml
-    - import_tasks: configure_pam.yml
     - import_tasks: configure_users.yml
+    - import_tasks: configure_pam.yml
+    #- import_tasks: configure_permissions.yml

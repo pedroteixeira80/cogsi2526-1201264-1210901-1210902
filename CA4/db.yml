@@ -1,12 +1,15 @@
+---
 - name: Update apt cache
   apt:
     update_cache: yes
+    cache_valid_time: 3600
 
-- name: Install OpenJDK 17 and unzip
+- name: Install OpenJDK 17, unzip, and net-tools
   apt:
     name:
       - openjdk-17-jdk
       - unzip
+      - net-tools
     state: present
 
 - name: Check if H2 directory exists
@@ -17,32 +20,79 @@
 - name: Download and extract H2 database
   when: not h2_dir.stat.exists
   block:
-    - name: Download H2 database
+    - name: Download H2 database JAR
       get_url:
-        url: http://www.h2database.com/h2-2019-10-14.zip
-        dest: /opt/h2-2019-10-14.zip
+        url: https://repo1.maven.org/maven2/com/h2database/h2/2.1.214/h2-2.1.214.jar
+        dest: /opt/h2.jar
+        mode: '0644'
 
     - name: Create H2 directory
       file:
         path: /opt/h2
         state: directory
+        mode: '0755'
 
-    - name: Unzip H2 database
-      unarchive:
-        src: /opt/h2-2019-10-14.zip
-        dest: /opt/h2
-        remote_src: yes
+    - name: Move H2 JAR to directory
+      command: mv /opt/h2.jar /opt/h2/h2.jar
+      args:
+        creates: /opt/h2/h2.jar
 
-- name: Check if H2 database is running on port 9092
-  shell: netstat -tuln | grep ':9092'
-  register: h2_status
-  ignore_errors: true
+- name: Ensure h2_data directory exists with correct permissions
+  file:
+    path: /home/vagrant/h2_data
+    state: directory
+    owner: vagrant
+    group: vagrant
+    mode: '0755'
+  become: yes
 
-- name: Start H2 database if not running
-  shell: "nohup java -cp /opt/h2/h2/bin/h2*.jar org.h2.tools.Server -tcp -tcpAllowOthers -tcpPort 9092 -web -webAllowOthers -webPort 8082 -baseDir /home/vagrant/h2_data -ifNotExists > /dev/null 2>&1 &"
-  when: h2_status.stdout.find('9092') == -1
+
+- name: Kill any existing H2 processes
+  shell: "pkill -f 'org.h2.tools.Server' || true"
+  changed_when: false
+  failed_when: false
+
+- name: Remove old H2 log and pid files
+  file:
+    path: "{{ item }}"
+    state: absent
+  loop:
+    - /home/vagrant/h2-server.log
+    - /home/vagrant/h2-server.pid
+
+- name: Wait for port to be released
+  wait_for:
+    port: 9092
+    state: stopped
+    timeout: 10
+  ignore_errors: yes
+
+- name: Start H2 database
+  shell: |
+    nohup java -cp /opt/h2/h2.jar org.h2.tools.Server \
+      -tcp -tcpAllowOthers -tcpPort 9092 \
+      -web -webAllowOthers -webPort 8082 \
+      -baseDir /home/vagrant/h2_data \
+      -ifNotExists > /home/vagrant/h2-server.log 2>&1 &
+    echo $! > /home/vagrant/h2-server.pid
   args:
     chdir: /home/vagrant
+    executable: /bin/bash
+  become: yes
+  become_user: vagrant
+  environment:
+    HOME: /home/vagrant
+
+- name: Wait for H2 to be ready
+  wait_for:
+    port: 9092
+    host: 0.0.0.0
+    delay: 2
+    timeout: 30
+  retries: 3
+  delay: 5
+  register: h2_ready
+  until: h2_ready is succeeded
 
 - name: Install UFW (Uncomplicated Firewall)
   apt:
@@ -59,13 +109,48 @@
     default: allow
     direction: outgoing
 
-- name: Allow connections to H2 database port (9092) from app VM (192.168.56.12)
+- name: Allow SSH connections
+  ufw:
+    rule: allow
+    port: '22'
+    proto: tcp
+
+- name: Allow connections to H2 database port (9092) from app VM
   ufw:
     rule: allow
     proto: tcp
     from_ip: 192.168.56.12
     port: "9092"
 
+- name: Allow H2 console port from private network
+  ufw:
+    rule: allow
+    proto: tcp
+    from_ip: 192.168.56.0/24
+    port: "8082"
+
 - name: Enable UFW
   ufw:
     state: enabled
+
+- name: Health check - Verify H2 database port is accepting connections
+  wait_for:
+    host: 0.0.0.0
+    port: 9092
+    state: started
+    timeout: 10
+  register: db_health
+  retries: 3
+  delay: 5
+  until: db_health is succeeded
+
+- name: Health check - Verify H2 web console is accessible
+  wait_for:
+    host: 0.0.0.0
+    port: 8082
+    state: started
+    timeout: 10
+  register: console_health
+  retries: 3
+  delay: 5
+  until: console_health is succeeded
